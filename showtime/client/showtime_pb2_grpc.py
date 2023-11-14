@@ -19,7 +19,7 @@ class ShowtimeStub(object):
                 request_serializer=showtime__pb2.Date.SerializeToString,
                 response_deserializer=showtime__pb2.ShowtimeData.FromString,
                 )
-        self.GetShowtimes = channel.unary_unary(
+        self.GetShowtimes = channel.unary_stream(
                 '/Showtime/GetShowtimes',
                 request_serializer=showtime__pb2.Empty.SerializeToString,
                 response_deserializer=showtime__pb2.ShowtimeData.FromString,
@@ -49,7 +49,7 @@ def add_ShowtimeServicer_to_server(servicer, server):
                     request_deserializer=showtime__pb2.Date.FromString,
                     response_serializer=showtime__pb2.ShowtimeData.SerializeToString,
             ),
-            'GetShowtimes': grpc.unary_unary_rpc_method_handler(
+            'GetShowtimes': grpc.unary_stream_rpc_method_handler(
                     servicer.GetShowtimes,
                     request_deserializer=showtime__pb2.Empty.FromString,
                     response_serializer=showtime__pb2.ShowtimeData.SerializeToString,
@@ -92,7 +92,7 @@ class Showtime(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Showtime/GetShowtimes',
+        return grpc.experimental.unary_stream(request, target, '/Showtime/GetShowtimes',
             showtime__pb2.Empty.SerializeToString,
             showtime__pb2.ShowtimeData.FromString,
             options, channel_credentials,

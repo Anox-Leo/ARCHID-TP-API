@@ -8,12 +8,12 @@ def get_showtime_by_date(stub,date):
     showtime = stub.GetShowtimeByDate(date)
     print(showtime)
 
-def get_list_movies(stub):
+def get_list_showtimes(stub):
     allshowtimes = stub.GetShowtimes(showtime_pb2.Empty())
     for showtime in allshowtimes:
-        print("Movies for this date :" + showtime.date)
+        print("Showtime for this date :" + showtime.date)
         for movie in showtime.movies:
-            print("\s" + movie)
+            print("Movie ID : %s" % movie)
 
 def run():
     # NOTE(gRPC Python Team): .close() is possible on a channel and should be
@@ -25,8 +25,8 @@ def run():
         print("-------------- GetMovieByID --------------")
         date = showtime_pb2.Date(date="20151130")
         get_showtime_by_date(stub, date)
-        print("-------------- GetListMovies --------------")
-        get_list_movies(stub)
+        print("-------------- GetListShowtime --------------")
+        get_list_showtimes(stub)
 
     channel.close()
 
