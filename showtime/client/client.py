@@ -1,13 +1,20 @@
-import grpc
+### Client pour le service Showtime ###
 
+### Import des modules nécessaires ###
+import grpc
 import showtime_pb2
 import showtime_pb2_grpc
 
 
-def get_showtime_by_date(stub,date):
+### Fonctions du client gRPC###
+
+# Fonction pour récupérer un showtime par sa date.
+def get_showtime_by_date(stub, date):
     showtime = stub.GetShowtimeByDate(date)
     print(showtime)
 
+
+# Fonction pour récupérer tous les showtimes.
 def get_list_showtimes(stub):
     allshowtimes = stub.GetShowtimes(showtime_pb2.Empty())
     for showtime in allshowtimes:
@@ -15,6 +22,8 @@ def get_list_showtimes(stub):
         for movie in showtime.movies:
             print("Movie ID : %s" % movie)
 
+
+### Initialisation du client gRPC ###
 def run():
     # NOTE(gRPC Python Team): .close() is possible on a channel and should be
     # used in circumstances in which the with statement does not fit the needs
@@ -30,5 +39,7 @@ def run():
 
     channel.close()
 
+
+### Lancement du client gRPC###
 if __name__ == '__main__':
     run()

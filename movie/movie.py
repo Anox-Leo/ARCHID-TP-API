@@ -1,13 +1,22 @@
+### GraphQL API pour le service Movie ###
+
+### Import des modules nécessaires ###
 from ariadne import graphql_sync, make_executable_schema, load_schema_from_path, ObjectType, QueryType, MutationType
 from ariadne.constants import PLAYGROUND_HTML
 from flask import Flask, request, jsonify, make_response
 
 import resolvers as r
 
-PORT = 3001
-HOST = 'localhost'
+### Initialisation du serveur Flask ###
 app = Flask(__name__)
 
+# Port d'écoute du serveur.
+PORT = 3001
+
+# Nom d'hôte du serveur.
+HOST = 'localhost'
+
+### Création du schéma GraphQL ###
 # todo create elements for Ariadne
 type_defs = load_schema_from_path('movie.graphql')
 query = QueryType()
@@ -22,18 +31,22 @@ mutation.set_field('create_new_movie', r.create_new_movie)
 mutation.set_field('delete_movie', r.delete_movie)
 schema = make_executable_schema(type_defs, movie, query, mutation, actor)
 
-# root message
+
+### Routes du serveur Flask ###
+
+# Route par défaut.
 @app.route("/", methods=['GET'])
 def home():
-    return make_response("<h1 style='color:blue'>Welcome to the Movie service!</h1>",200)
+    return make_response("<h1 style='color:blue'>Welcome to the Movie service!</h1>", 200)
 
-#####
-# graphql entry points
 
+# Route pour récupérer tous les films.
 @app.route('/graphql', methods=['GET'])
 def playground():
     return PLAYGROUND_HTML, 200
-    
+
+
+# Route pour récupérer tous les films.
 @app.route('/graphql', methods=['POST'])
 def graphql_server():
     data = request.get_json()
@@ -46,6 +59,8 @@ def graphql_server():
     status_code = 200 if success else 400
     return jsonify(result), status_code
 
+
+### Lancement du serveur Flask ###
 if __name__ == "__main__":
-    print("Server running in port %s"%(PORT))
+    print("Server running in port %s" % (PORT))
     app.run(host=HOST, port=PORT)
