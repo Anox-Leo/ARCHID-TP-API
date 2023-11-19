@@ -1,19 +1,25 @@
 ### gRPC serveur pour le service booking ###
 
+import json
+from concurrent import futures
+
 ### Import des librairies. ###
 import grpc
-from concurrent import futures
+
 import booking_pb2
 import booking_pb2_grpc
-import json
+from showtime.client import showtime_pb2_grpc
 
 
 class BookingServicer(booking_pb2_grpc.BookingServicer):
 
     # Ici on va chercher les données dans le fichier JSON.
-    def __init__(self):
+    def __init__(self, times_stub):
         with open('{}/data/bookings.json'.format("."), "r") as jsf:
             self.db = json.load(jsf)["bookings"]
+
+            # Stub pour Times
+            self.times_stub = times_stub
 
     ### Fonctions du serveur gRPC ###
 
@@ -36,7 +42,11 @@ class BookingServicer(booking_pb2_grpc.BookingServicer):
 ### Initialisation du serveur gRPC ###
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    booking_pb2_grpc.add_BookingServicer_to_server(BookingServicer(), server)
+    times_channel = grpc.insecure_channel('localhost:3005')  # Assurez-vous que le port est correct
+    times_stub = showtime_pb2_grpc.TimesStub(times_channel)
+
+    # Initialisation de BookingServicer avec le stub Times
+    booking_pb2_grpc.add_BookingServicer_to_server(BookingServicer(times_stub), server)
     server.add_insecure_port('[::]:3004')
     server.start()
     server.wait_for_termination()

@@ -10,6 +10,8 @@ from werkzeug.exceptions import NotFound
 import grpc
 from concurrent import futures
 
+from booking import booking_pb2
+from booking import booking_pb2_grpc
 # import booking_pb2
 # import booking_pb2_grpc
 # import movie_pb2
@@ -33,6 +35,11 @@ with open('{}/data/users.json'.format("."), "r") as jsf:
     users = json.load(jsf)["users"]
 
 
+    # Connexion au serveur gRPC de Booking
+    booking_channel = grpc.insecure_channel('localhost:3004')  # Assurez-vous que le port est correct
+    booking_stub = booking_pb2_grpc.BookingStub(booking_channel)
+
+
 ### Routes du serveur Flask ###
 
 # Route par défaut.
@@ -48,35 +55,43 @@ def get_json():
     return res
 
 
+
 # Route pour récupérer un utilisateur par son id.
 @app.route("/users/<userid>", methods=['GET'])
 def get_bookings_by_userid(userid):
-    res = 0
-    for user in users:
-        if str(user["id"]) == str(userid):
-            res = make_response(jsonify(user), 200)
-    if res == 0:
+    user_found = next((user for user in users if str(user["id"]) == str(userid)), None)
+    if user_found:
+        # Appel de la procédure distante gRPC pour obtenir les réservations de l'utilisateur
+        booking_request = booking_pb2.GetBookingByUserIdRequest(id=userid)
+        booking_response = booking_stub.GetBookingByUserId(booking_request)
+        return make_response(jsonify(booking_response), 200)
+    else:
         return make_response(jsonify({"error": "User not found"}), 400)
-    return make_response(requests.get("http://172.16.137.162:3201/bookings/chris_rivers").json(), 200)
 
 
 # Route pour récupérer les films d'un utilisateur par son id.
 @app.route("/movies/<userid>", methods=['GET'])
 def get_movies_by_user(userid):
-    movies = []
-    res = {}
-    bookings = requests.get("http://172.16.137.162:3201/bookings/chris_rivers").json()
-    for booking in bookings["bookings"]:
-        dates = booking["dates"]
-        for date in dates:
-            movies.append(date["movies"])
-    for movie in movies:
-        for element in movie:
-            query = 'query { movie_with_id(_id: "' + element + '") { id rating title director } }'
-            desc = requests.post("http://localhost:3001/graphql", json={'query': query}).json()
-            res.setdefault("movies", []).append(desc)
-    return make_response(jsonify(res), 200)
+    user_found = next((user for user in users if str(user["id"]) == str(userid)), None)
+    if user_found:
+        # Appel de la procédure distante gRPC pour obtenir les réservations de l'utilisateur
+        booking_request = booking_pb2.GetBookingByUserIdRequest(id=userid)
+        booking_response = booking_stub.GetBookingByUserId(booking_request)
 
+        movies = []
+        res = {}
+        for booking in booking_response:
+            dates = booking.dates
+            for date in dates:
+                movies.append(date.movies)
+        for movie in movies:
+            for element in movie:
+                query = 'query { movie_with_id(_id: "' + element + '") { id rating title director } }'
+                desc = requests.post("http://localhost:3001/graphql", json={'query': query}).json()
+                res.setdefault("movies", []).append(desc)
+        return make_response(jsonify(res), 200)
+    else:
+        return make_response(jsonify({"error": "User not found"}), 400)
 
 ### Lancement du serveur Flask ###
 
