@@ -4,6 +4,8 @@
 from flask import Flask, render_template, request, jsonify, make_response
 import requests
 import json
+
+from google.protobuf.json_format import MessageToDict
 from werkzeug.exceptions import NotFound
 
 # CALLING gRPC requests
@@ -61,12 +63,10 @@ def get_bookings_by_userid(userid):
     user_found = next((user for user in users if str(user["id"]) == str(userid)), None)
     if user_found:
         # Appel de la procédure distante gRPC pour obtenir les réservations de l'utilisateur
-        # Appel de la procédure distante gRPC pour obtenir les réservations de l'utilisateur
         booking_request = booking_pb2.UserId(id=userid)
         booking_response = booking_stub.GetBookingByUserId(booking_request)
 
-        booking_dict = {"id": booking_response.id, "date": booking_response.date,
-                        "movies": list(booking_response.movies)}
+        booking_dict = {"id": booking_response.id, "date": booking_response.date}
 
         return make_response(jsonify(booking_dict), 200)
     else:
@@ -79,20 +79,24 @@ def get_movies_by_user(userid):
     user_found = next((user for user in users if str(user["id"]) == str(userid)), None)
     if user_found:
         # Appel de la procédure distante gRPC pour obtenir les réservations de l'utilisateur
-        booking_request = booking_pb2.GetBookingByUserIdRequest(id=userid)
+        booking_request = booking_pb2.UserId(id=userid)
         booking_response = booking_stub.GetBookingByUserId(booking_request)
+
+        booking_dict = {"id": booking_response.id, "date": booking_response.date, "movies": booking_response.movies}
 
         movies = []
         res = {}
-        for booking in booking_response:
-            dates = booking.dates
-            for date in dates:
-                movies.append(date.movies)
-        for movie in movies:
-            for element in movie:
-                query = 'query { movie_with_id(_id: "' + element + '") { id rating title director } }'
-                desc = requests.post("http://localhost:3001/graphql", json={'query': query}).json()
-                res.setdefault("movies", []).append(desc)
+
+        # Extrait le champ 'dates' de la réponse de la réservation
+        dates = booking_dict.get("dates", [])
+
+        for date in dates:
+            movies.extend(date.get("movies", []))
+        for element in movies:
+            query = 'query { movie_with_id(_id: "' + element + '") { id rating title director } }'
+            desc = requests.post("http://localhost:3001/graphql", json={'query': query}).json()
+            res.setdefault("movies", []).append(MessageToDict(desc['data']['movie_with_id']))
+
         return make_response(jsonify(res), 200)
     else:
         return make_response(jsonify({"error": "User not found"}), 400)
