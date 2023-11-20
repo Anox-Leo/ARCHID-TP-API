@@ -8,7 +8,8 @@ import grpc
 
 import booking_pb2
 import booking_pb2_grpc
-from showtime.client import showtime_pb2_grpc
+import showtime_pb2
+import showtime_pb2_grpc
 
 
 class BookingServicer(booking_pb2_grpc.BookingServicer):
@@ -38,12 +39,30 @@ class BookingServicer(booking_pb2_grpc.BookingServicer):
             for dates in booking['dates']:
                 yield booking_pb2.BookingData(id=booking['userid'], date=dates['date'], movies=dates['movies'])
 
+    def CreateBooking(self, request, context):
+        schedule = self.times_stub.GetShowtimeByDate(showtime_pb2.Date(date=request.date))
+        if len(schedule.movies) == 0:
+            return booking_pb2.BookingData(id="", date="", movies=[])
+        else:
+            self.db.append({
+                "userid": request.userid,
+                "dates": [
+                    {
+                        "date": request.date,
+                        "movies": [
+                            request.movieid
+                        ],
+                    }
+                ]
+            })
+            return booking_pb2.BookingData(id=request.userid, date=request.date, movies=[request.movieid])
+
 
 ### Initialisation du serveur gRPC ###
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    times_channel = grpc.insecure_channel('localhost:3005')  # Assurez-vous que le port est correct
-    times_stub = showtime_pb2_grpc.TimesStub(times_channel)
+    times_channel = grpc.insecure_channel('localhost:3002')  # Assurez-vous que le port est correct
+    times_stub = showtime_pb2_grpc.ShowtimeStub(times_channel)
 
     # Initialisation de BookingServicer avec le stub Times
     booking_pb2_grpc.add_BookingServicer_to_server(BookingServicer(times_stub), server)
