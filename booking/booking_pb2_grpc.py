@@ -17,12 +17,17 @@ class BookingStub(object):
         self.GetBookingByUserId = channel.unary_unary(
                 '/Booking/GetBookingByUserId',
                 request_serializer=booking__pb2.UserId.SerializeToString,
-                response_deserializer=booking__pb2.BookingData.FromString,
+                response_deserializer=booking__pb2.BookingResponse.FromString,
                 )
         self.GetBookings = channel.unary_stream(
                 '/Booking/GetBookings',
                 request_serializer=booking__pb2.BookingEmpty.SerializeToString,
-                response_deserializer=booking__pb2.BookingData.FromString,
+                response_deserializer=booking__pb2.BookingResponse.FromString,
+                )
+        self.CreateBooking = channel.unary_unary(
+                '/Booking/CreateBooking',
+                request_serializer=booking__pb2.BookingRequest.SerializeToString,
+                response_deserializer=booking__pb2.BookingResponse.FromString,
                 )
 
 
@@ -41,18 +46,29 @@ class BookingServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def CreateBooking(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_BookingServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'GetBookingByUserId': grpc.unary_unary_rpc_method_handler(
                     servicer.GetBookingByUserId,
                     request_deserializer=booking__pb2.UserId.FromString,
-                    response_serializer=booking__pb2.BookingData.SerializeToString,
+                    response_serializer=booking__pb2.BookingResponse.SerializeToString,
             ),
             'GetBookings': grpc.unary_stream_rpc_method_handler(
                     servicer.GetBookings,
                     request_deserializer=booking__pb2.BookingEmpty.FromString,
-                    response_serializer=booking__pb2.BookingData.SerializeToString,
+                    response_serializer=booking__pb2.BookingResponse.SerializeToString,
+            ),
+            'CreateBooking': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateBooking,
+                    request_deserializer=booking__pb2.BookingRequest.FromString,
+                    response_serializer=booking__pb2.BookingResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -77,7 +93,7 @@ class Booking(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/Booking/GetBookingByUserId',
             booking__pb2.UserId.SerializeToString,
-            booking__pb2.BookingData.FromString,
+            booking__pb2.BookingResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -94,6 +110,23 @@ class Booking(object):
             metadata=None):
         return grpc.experimental.unary_stream(request, target, '/Booking/GetBookings',
             booking__pb2.BookingEmpty.SerializeToString,
-            booking__pb2.BookingData.FromString,
+            booking__pb2.BookingResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def CreateBooking(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Booking/CreateBooking',
+            booking__pb2.BookingRequest.SerializeToString,
+            booking__pb2.BookingResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

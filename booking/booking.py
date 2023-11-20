@@ -27,35 +27,36 @@ class BookingServicer(booking_pb2_grpc.BookingServicer):
     # Fonction pour récupérer un utilisateur par son id.
     def GetBookingByUserId(self, request, context):
         for booking in self.db:
+            print(request.id)
             if booking['userid'] == request.id:
                 print("Booking found!")
                 for dates in booking['dates']:
-                    return booking_pb2.BookingData(id=booking['userid'], date=dates['date'], movies=dates['movies'])
-        return booking_pb2.BookingData(id="", date="", movies=[])
+                    return booking_pb2.BookingResponse(id=booking['userid'], date=dates['date'], movies=dates['movies'])
+        return booking_pb2.BookingResponse(id="", date="", movies=[])
 
     # Fonction pour récupérer tous les utilisateurs.
     def GetBookings(self, request, context):
         for booking in self.db:
             for dates in booking['dates']:
-                yield booking_pb2.BookingData(id=booking['userid'], date=dates['date'], movies=dates['movies'])
+                yield booking_pb2.BookingResponse(id=booking['userid'], date=dates['date'], movies=dates['movies'])
 
     def CreateBooking(self, request, context):
         schedule = self.times_stub.GetShowtimeByDate(showtime_pb2.Date(date=request.date))
-        if len(schedule.movies) == 0:
-            return booking_pb2.BookingData(id="", date="", movies=[])
+        movies = []
+        if len(schedule.movies) == 0 or request.movieid not in schedule.movies:
+            return booking_pb2.BookingResponse(id="", date="", movies=[])
         else:
+            movies.append(request.movieid)
             self.db.append({
-                "userid": request.userid,
+                "userid": request.id,
                 "dates": [
                     {
                         "date": request.date,
-                        "movies": [
-                            request.movieid
-                        ],
+                        "movies": movies,
                     }
                 ]
             })
-            return booking_pb2.BookingData(id=request.userid, date=request.date, movies=[request.movieid])
+            return booking_pb2.BookingResponse(id=request.id, date=request.date, movies=movies)
 
 
 ### Initialisation du serveur gRPC ###

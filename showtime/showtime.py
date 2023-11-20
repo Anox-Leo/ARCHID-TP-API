@@ -28,7 +28,6 @@ class ShowtimeServicer(showtime_pb2_grpc.ShowtimeServicer):
     # Fonction pour récupérer la liste des showtimes par leur date et leur titre.
     def GetShowtimes(self, request, context):
         for time in self.db:
-            print("test")
             yield showtime_pb2.ShowtimeData(date=time['date'], movies=time['movies'])
 
 
