@@ -62,7 +62,7 @@ class BookingServicer(booking_pb2_grpc.BookingServicer):
 ### Initialisation du serveur gRPC ###
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    times_channel = grpc.insecure_channel('localhost:3002')  # Assurez-vous que le port est correct
+    times_channel = grpc.insecure_channel('localhost:3002')
     times_stub = showtime_pb2_grpc.ShowtimeStub(times_channel)
 
     # Initialisation de BookingServicer avec le stub Times

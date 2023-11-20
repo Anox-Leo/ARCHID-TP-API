@@ -1,4 +1,4 @@
-### REST API pour le service User ###
+### TP - REST API pour le service User ###
 
 ### Import des librairies ###
 from flask import Flask, render_template, request, jsonify, make_response
@@ -10,8 +10,9 @@ from werkzeug.exceptions import NotFound
 import grpc
 from concurrent import futures
 
-from booking import booking_pb2
-from booking import booking_pb2_grpc
+import booking_pb2
+import booking_pb2_grpc
+
 # import booking_pb2
 # import booking_pb2_grpc
 # import movie_pb2
@@ -34,9 +35,8 @@ HOST = 'localhost'
 with open('{}/data/users.json'.format("."), "r") as jsf:
     users = json.load(jsf)["users"]
 
-
     # Connexion au serveur gRPC de Booking
-    booking_channel = grpc.insecure_channel('localhost:3004')  # Assurez-vous que le port est correct
+    booking_channel = grpc.insecure_channel('localhost:3004')
     booking_stub = booking_pb2_grpc.BookingStub(booking_channel)
 
 
@@ -55,16 +55,20 @@ def get_json():
     return res
 
 
-
 # Route pour récupérer un utilisateur par son id.
 @app.route("/users/<userid>", methods=['GET'])
 def get_bookings_by_userid(userid):
     user_found = next((user for user in users if str(user["id"]) == str(userid)), None)
     if user_found:
         # Appel de la procédure distante gRPC pour obtenir les réservations de l'utilisateur
-        booking_request = booking_pb2.GetBookingByUserIdRequest(id=userid)
+        # Appel de la procédure distante gRPC pour obtenir les réservations de l'utilisateur
+        booking_request = booking_pb2.UserId(id=userid)
         booking_response = booking_stub.GetBookingByUserId(booking_request)
-        return make_response(jsonify(booking_response), 200)
+
+        booking_dict = {"id": booking_response.id, "date": booking_response.date,
+                        "movies": list(booking_response.movies)}
+
+        return make_response(jsonify(booking_dict), 200)
     else:
         return make_response(jsonify({"error": "User not found"}), 400)
 
@@ -92,6 +96,7 @@ def get_movies_by_user(userid):
         return make_response(jsonify(res), 200)
     else:
         return make_response(jsonify({"error": "User not found"}), 400)
+
 
 ### Lancement du serveur Flask ###
 
