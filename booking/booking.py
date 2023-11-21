@@ -62,7 +62,7 @@ def serve():
     times_channel = grpc.insecure_channel('localhost:3002')
     times_stub = showtime_pb2_grpc.ShowtimeStub(times_channel)
 
-    # Initialisation de BookingServicer avec le stub Times
+    # Initialisation de BookingServicer avec le stub Times.
     booking_pb2_grpc.add_BookingServicer_to_server(BookingServicer(times_stub), server)
     server.add_insecure_port('[::]:3004')
     server.start()

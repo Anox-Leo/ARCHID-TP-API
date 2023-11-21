@@ -16,7 +16,6 @@ import booking_pb2_grpc
 
 
 # CALLING GraphQL requests
-# todo to complete
 
 ### Initialisation du serveur Flask ###
 
@@ -82,7 +81,7 @@ def get_bookings_by_userid(userid):
 def get_movies_by_user(userid):
     user_found = next((user for user in users if str(user["id"]) == str(userid)), None)
     if user_found:
-        # Appel de la procédure distante gRPC pour obtenir les réservations de l'utilisateur
+        # Appel de la procédure distante gRPC pour obtenir les réservations de l'utilisateur.
         booking_request = booking_pb2.UserId(id=userid)
         booking_response = booking_stub.GetBookingByUserId(booking_request)
 
@@ -130,7 +129,7 @@ def get_movie_bytitle(title):
 # Route pour récupérer toutes les réservations.
 @app.route("/bookings", methods=['GET'])
 def get_bookings():
-    # Appel de la procédure distante gRPC pour obtenir les réservations de l'utilisateur
+    # Appel de la procédure distante gRPC pour obtenir les réservations de l'utilisateur.
     booking_request = booking_pb2.BookingEmpty()
     booking_response = booking_stub.GetBookings(booking_request)
 
@@ -162,7 +161,7 @@ def add_booking_byuser(userid):
             return make_response(jsonify({"message": "booking added"}), 200)
 
 
-# Route pour créer un nouveau film
+# Route pour créer un nouveau film.
 @app.route("/movies/<movieid>", methods=['POST'])
 def create_movie(movieid):
     req = request.get_json()
@@ -172,7 +171,7 @@ def create_movie(movieid):
     return res
 
 
-# Route pour mettre à jour la note d'un film
+# Route pour mettre à jour la note d'un film.
 @app.route("/movies/<movieid>/<rate>", methods=['PUT'])
 def update_movie(movieid, rate):
     query = 'mutation { update_movie_rate(_id: "' + movieid + '", _rating: ' + str(rate) + ') { id title director rating } }'
@@ -180,7 +179,7 @@ def update_movie(movieid, rate):
     return res
 
 
-# Route pour supprimer un film
+# Route pour supprimer un film.
 @app.route("/movies/<movieid>", methods=['DELETE'])
 def delete_movie(movieid):
     query = 'mutation { delete_movie(_id: "' + movieid + '") { id title director rating } }'

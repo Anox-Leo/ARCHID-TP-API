@@ -17,7 +17,6 @@ PORT = 3001
 HOST = 'localhost'
 
 ### Création du schéma GraphQL ###
-# todo create elements for Ariadne
 type_defs = load_schema_from_path('movie.graphql')
 query = QueryType()
 movie = ObjectType('Movie')
@@ -40,13 +39,13 @@ def home():
     return make_response("<h1 style='color:blue'>Welcome to the Movie service!</h1>", 200)
 
 
-# Route pour récupérer tous les films.
+# Route pour récupérer le playground.
 @app.route('/graphql', methods=['GET'])
 def playground():
     return PLAYGROUND_HTML, 200
 
 
-# Route pour récupérer tous les films.
+# Unique point d'entrée.
 @app.route('/graphql', methods=['POST'])
 def graphql_server():
     data = request.get_json()
