@@ -27,12 +27,9 @@ class BookingServicer(booking_pb2_grpc.BookingServicer):
     # Fonction pour récupérer un utilisateur par son id.
     def GetBookingByUserId(self, request, context):
         for booking in self.db:
-            print(request.id)
             if booking['userid'] == request.id:
-                print("Booking found!")
                 for dates in booking['dates']:
-                    return booking_pb2.BookingResponse(id=booking['userid'], date=dates['date'], movies=dates['movies'])
-        return booking_pb2.BookingResponse(id="", date="", movies=[])
+                    yield booking_pb2.BookingResponse(id=booking['userid'], date=dates['date'], movies=dates['movies'])
 
     # Fonction pour récupérer tous les utilisateurs.
     def GetBookings(self, request, context):

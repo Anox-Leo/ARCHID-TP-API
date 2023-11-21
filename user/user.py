@@ -15,10 +15,6 @@ from concurrent import futures
 import booking_pb2
 import booking_pb2_grpc
 
-# import booking_pb2
-# import booking_pb2_grpc
-# import movie_pb2
-# import movie_pb2_grpc
 
 # CALLING GraphQL requests
 # todo to complete
@@ -66,9 +62,18 @@ def get_bookings_by_userid(userid):
         booking_request = booking_pb2.UserId(id=userid)
         booking_response = booking_stub.GetBookingByUserId(booking_request)
 
-        booking_dict = {"id": booking_response.id, "date": booking_response.date}
+        bookings = {
+            "id": userid,
+            "dates": []
+        }
+        for booking in booking_response:
+            booking_dict = MessageToDict(booking)
+            bookings["dates"].append({
+                "date": booking_dict["date"],
+                "movies": booking_dict["movies"]
+            })
 
-        return make_response(jsonify(booking_dict), 200)
+        return make_response(jsonify(bookings), 200)
     else:
         return make_response(jsonify({"error": "User not found"}), 400)
 
@@ -82,24 +87,72 @@ def get_movies_by_user(userid):
         booking_request = booking_pb2.UserId(id=userid)
         booking_response = booking_stub.GetBookingByUserId(booking_request)
 
-        booking_dict = {"id": booking_response.id, "date": booking_response.date, "movies": booking_response.movies}
+        dates = []
+
+        for booking in booking_response:
+            booking_dict = MessageToDict(booking)
+            dates.append({
+                "date": booking_dict["date"],
+                "movies": booking_dict["movies"]
+            })
 
         movies = []
-        res = {}
-
-        # Extrait le champ 'dates' de la réponse de la réservation
-        dates = booking_dict.get("dates", [])
+        res = []
 
         for date in dates:
-            movies.extend(date.get("movies", []))
+            for movie in date["movies"]:
+                movies.append(movie)
         for element in movies:
             query = 'query { movie_with_id(_id: "' + element + '") { id rating title director } }'
             desc = requests.post("http://localhost:3001/graphql", json={'query': query}).json()
-            res.setdefault("movies", []).append(MessageToDict(desc['data']['movie_with_id']))
+            res.append(desc["data"]["movie_with_id"])
 
         return make_response(jsonify(res), 200)
     else:
         return make_response(jsonify({"error": "User not found"}), 400)
+
+
+
+#def get_bookings():
+
+
+# Route pour ajouter une réservation à un utilisateur.
+@app.route("/bookings/<userid>", methods=['POST'])
+def add_booking_byuser(userid):
+    user_found = next((user for user in users if str(user["id"]) == str(userid)), None)
+    if user_found:
+        req = request.get_json()
+        booking_request = booking_pb2.BookingRequest(id=userid, date=req["date"], movieid=req["movieid"])
+        booking_response = booking_stub.CreateBooking(booking_request)
+
+        if booking_response.id == "":
+            return make_response(jsonify({"error": "Film for this date not found"}), 400)
+        else:
+            print(booking_response)
+            return make_response(jsonify({"message": "booking added"}), 200)
+
+
+@app.route("/movies/<movieid>", methods=['POST'])
+def create_movie(movieid):
+    req = request.get_json()
+    query = 'mutation { create_new_movie(_id: "' + movieid + '", _title: "' + req["title"] + '", _director: "' + req[
+        "director"] + '", _rating: ' + str(req["rating"]) + ') { id title director rating } }'
+    res = requests.post("http://localhost:3001/graphql", json={'query': query}).json()
+    return res
+
+
+@app.route("/movies/<movieid>/<rate>", methods=['PUT'])
+def update_movie(movieid, rate):
+    query = 'mutation { update_movie_rate(_id: "' + movieid + '", _rating: ' + str(rate) + ') { id title director rating } }'
+    res = requests.post("http://localhost:3001/graphql", json={'query': query}).json()
+    return res
+
+
+@app.route("/movies/<movieid>", methods=['DELETE'])
+def delete_movie(movieid):
+    query = 'mutation { delete_movie(_id: "' + movieid + '") { id title director rating } }'
+    res = requests.post("http://localhost:3001/graphql", json={'query': query}).json()
+    return res
 
 
 ### Lancement du serveur Flask ###

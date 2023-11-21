@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 service Booking {
-  rpc GetBookingByUserId(UserId) returns (BookingResponse) {}
+  rpc GetBookingByUserId(UserId) returns (stream BookingResponse) {}
   rpc GetBookings(BookingEmpty) returns (stream BookingResponse) {}
   rpc CreateBooking(BookingRequest) returns (BookingResponse) {}
 }
