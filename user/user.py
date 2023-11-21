@@ -6,7 +6,6 @@ import requests
 import json
 
 from google.protobuf.json_format import MessageToDict
-from werkzeug.exceptions import NotFound
 
 # CALLING gRPC requests
 import grpc
@@ -112,8 +111,39 @@ def get_movies_by_user(userid):
         return make_response(jsonify({"error": "User not found"}), 400)
 
 
+# Route pout récupérer un film par son id.
+@app.route("/movies/movie/<movieid>", methods=['GET'])
+def get_movie_byid(movieid):
+    query = 'query {movie_with_id(_id: "' + movieid + '") { id rating title director } }'
+    res = requests.post("http://localhost:3001/graphql", json={'query': query}).json()
+    return res
 
-#def get_bookings():
+
+# Route pour récupérer un film par son titre.
+@app.route("/movies/title/<title>", methods=['GET'])
+def get_movie_bytitle(title):
+    query = 'query { movie_with_title(_title: "' + title + '") { id rating title director } }'
+    res = requests.post("http://localhost:3001/graphql", json={'query': query}).json()
+    return res
+
+
+# Route pour récupérer toutes les réservations.
+@app.route("/bookings", methods=['GET'])
+def get_bookings():
+    # Appel de la procédure distante gRPC pour obtenir les réservations de l'utilisateur
+    booking_request = booking_pb2.BookingEmpty()
+    booking_response = booking_stub.GetBookings(booking_request)
+
+    bookings = []
+    for booking in booking_response:
+        booking_dict = MessageToDict(booking)
+        bookings.append({
+            "id": booking_dict["id"],
+            "date": booking_dict["date"],
+            "movies": booking_dict["movies"]
+        })
+
+    return make_response(jsonify(bookings), 200)
 
 
 # Route pour ajouter une réservation à un utilisateur.
@@ -132,6 +162,7 @@ def add_booking_byuser(userid):
             return make_response(jsonify({"message": "booking added"}), 200)
 
 
+# Route pour créer un nouveau film
 @app.route("/movies/<movieid>", methods=['POST'])
 def create_movie(movieid):
     req = request.get_json()
@@ -141,6 +172,7 @@ def create_movie(movieid):
     return res
 
 
+# Route pour mettre à jour la note d'un film
 @app.route("/movies/<movieid>/<rate>", methods=['PUT'])
 def update_movie(movieid, rate):
     query = 'mutation { update_movie_rate(_id: "' + movieid + '", _rating: ' + str(rate) + ') { id title director rating } }'
@@ -148,6 +180,7 @@ def update_movie(movieid, rate):
     return res
 
 
+# Route pour supprimer un film
 @app.route("/movies/<movieid>", methods=['DELETE'])
 def delete_movie(movieid):
     query = 'mutation { delete_movie(_id: "' + movieid + '") { id title director rating } }'
