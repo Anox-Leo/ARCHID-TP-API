@@ -16,7 +16,7 @@ with open('{}/databases/bookings.json'.format("."), "r") as jsf:
     bookings = json.load(jsf)["bookings"]
 
 
-### Initialisation du serveur gRPC ###
+### Initialisation des routes ###
 
 # Route pour la page d'accueil.
 @app.route("/", methods=['GET'])
