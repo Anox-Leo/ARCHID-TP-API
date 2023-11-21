@@ -6,7 +6,7 @@ from werkzeug.exceptions import NotFound
 app = Flask(__name__)
 
 PORT = 3203
-HOST = '127.0.0.1'
+HOST = '0.0.0.0'
 
 with open('{}/databases/users.json'.format("."), "r") as jsf:
    users = json.load(jsf)["users"]
@@ -29,21 +29,21 @@ def get_bookings_by_userid(userid):
             res = make_response(jsonify(user),200)
     if res == 0:
         return make_response(jsonify({"error":"User not found"}),400)
-    return make_response(requests.get(str("http://127.0.0.1:3201/bookings/" + userid)).json(), 200)
+    return make_response(requests.get(str("http://booking:3201/bookings/" + userid)).json(), 200)
 
 
 @app.route("/movies/<userid>", methods=['GET'])
 def get_movies_by_user(userid):
     movies = []
     res = {}
-    bookings = requests.get(str("http://127.0.0.1:3201/bookings/" + userid)).json()
+    bookings = requests.get(str("http://booking:3201/bookings/" + userid)).json()
     for booking in bookings["bookings"]:
         dates = booking["dates"]
         for date in dates:
             movies.append(date["movies"])
     for movie in movies:
         for element in movie:
-            desc = requests.get("http://127.0.0.1:3200/movies/" + element).json()
+            desc = requests.get("http://movie:3200/movies/" + element).json()
             res.setdefault("movies", []).append(desc)
     return make_response(jsonify(res), 200)
 

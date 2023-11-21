@@ -14,7 +14,7 @@ app = Flask(__name__)
 PORT = 3001
 
 # Nom d'hôte du serveur.
-HOST = 'localhost'
+HOST = '0.0.0.0'
 
 ### Création du schéma GraphQL ###
 type_defs = load_schema_from_path('movie.graphql')

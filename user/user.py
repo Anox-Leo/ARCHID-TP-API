@@ -25,14 +25,14 @@ app = Flask(__name__)
 PORT = 3003
 
 # Nom d'hôte du serveur.
-HOST = 'localhost'
+HOST = '0.0.0.0'
 
 # Ici on va chercher les données dans le fichier JSON.
 with open('{}/data/users.json'.format("."), "r") as jsf:
     users = json.load(jsf)["users"]
 
     # Connexion au serveur gRPC de Booking
-    booking_channel = grpc.insecure_channel('localhost:3004')
+    booking_channel = grpc.insecure_channel('booking:3004')
     booking_stub = booking_pb2_grpc.BookingStub(booking_channel)
 
 
@@ -102,7 +102,7 @@ def get_movies_by_user(userid):
                 movies.append(movie)
         for element in movies:
             query = 'query { movie_with_id(_id: "' + element + '") { id rating title director } }'
-            desc = requests.post("http://localhost:3001/graphql", json={'query': query}).json()
+            desc = requests.post("http://movie:3001/graphql", json={'query': query}).json()
             res.append(desc["data"]["movie_with_id"])
 
         return make_response(jsonify(res), 200)
@@ -114,7 +114,7 @@ def get_movies_by_user(userid):
 @app.route("/movies/movie/<movieid>", methods=['GET'])
 def get_movie_byid(movieid):
     query = 'query {movie_with_id(_id: "' + movieid + '") { id rating title director } }'
-    res = requests.post("http://localhost:3001/graphql", json={'query': query}).json()
+    res = requests.post("http://movie:3001/graphql", json={'query': query}).json()
     return res
 
 
@@ -122,7 +122,7 @@ def get_movie_byid(movieid):
 @app.route("/movies/title/<title>", methods=['GET'])
 def get_movie_bytitle(title):
     query = 'query { movie_with_title(_title: "' + title + '") { id rating title director } }'
-    res = requests.post("http://localhost:3001/graphql", json={'query': query}).json()
+    res = requests.post("http://movie:3001/graphql", json={'query': query}).json()
     return res
 
 
@@ -167,7 +167,7 @@ def create_movie(movieid):
     req = request.get_json()
     query = 'mutation { create_new_movie(_id: "' + movieid + '", _title: "' + req["title"] + '", _director: "' + req[
         "director"] + '", _rating: ' + str(req["rating"]) + ') { id title director rating } }'
-    res = requests.post("http://localhost:3001/graphql", json={'query': query}).json()
+    res = requests.post("http://movie:3001/graphql", json={'query': query}).json()
     return res
 
 
@@ -175,7 +175,7 @@ def create_movie(movieid):
 @app.route("/movies/<movieid>/<rate>", methods=['PUT'])
 def update_movie(movieid, rate):
     query = 'mutation { update_movie_rate(_id: "' + movieid + '", _rating: ' + str(rate) + ') { id title director rating } }'
-    res = requests.post("http://localhost:3001/graphql", json={'query': query}).json()
+    res = requests.post("http://movie:3001/graphql", json={'query': query}).json()
     return res
 
 
@@ -183,7 +183,7 @@ def update_movie(movieid, rate):
 @app.route("/movies/<movieid>", methods=['DELETE'])
 def delete_movie(movieid):
     query = 'mutation { delete_movie(_id: "' + movieid + '") { id title director rating } }'
-    res = requests.post("http://localhost:3001/graphql", json={'query': query}).json()
+    res = requests.post("http://movie:3001/graphql", json={'query': query}).json()
     return res
 
 
