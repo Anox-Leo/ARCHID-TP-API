@@ -26,3 +26,8 @@ There are 4 microservices in this TP:
 ```bash
 docker-compose up
 ```
+
+## 4. Authors
+
+- Adam Guillouet
+- Léo Joly--Jehenne
